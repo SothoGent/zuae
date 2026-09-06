@@ -7,7 +7,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { UniCrest } from "@/components/brand";
 import { Reveal } from "@/components/motion";
 import { IconClock, IconSearch } from "@/components/icons";
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { asc, eq } from "drizzle-orm";
 import { formatDate } from "@/lib/utils";
 import { PROVINCES } from "@/lib/matcher";
 
@@ -19,7 +19,6 @@ type Params = { q?: string; level?: string; province?: string; type?: string };
 export default async function ProgrammesPage({ searchParams }: { searchParams: Promise<Params> }) {
   const sp = await searchParams;
   const q = (sp.q ?? "").trim();
-  const uniNames = ["University of Zimbabwe", "National University of Science & Technology", "Midlands State University"];
   let rows: {
     programme: typeof programmes.$inferSelect;
     university: Pick<typeof universities.$inferSelect, "id" | "name" | "type" | "category" | "city" | "province" | "hue" | "logoUrl">;
@@ -41,7 +40,7 @@ export default async function ProgrammesPage({ searchParams }: { searchParams: P
       })
       .from(programmes)
       .innerJoin(universities, eq(universities.id, programmes.universityId))
-      .where(and(eq(programmes.active, true), inArray(universities.name, uniNames)))
+      .where(eq(programmes.active, true))
       .orderBy(asc(programmes.deadline));
   } catch (error) {
     console.error("Database error loading programmes:", error);
