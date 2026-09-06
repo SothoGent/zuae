@@ -4,6 +4,9 @@ import { errorResponse, requireAdmin } from "@/lib/guard";
 import { inArray } from "drizzle-orm";
 import { Writable } from "stream";
 
+// @ts-ignore archiver exposes a CommonJS callable export
+const archiver = require("archiver");
+
 export async function POST(req: Request) {
   try {
     await requireAdmin();
@@ -21,9 +24,6 @@ export async function POST(req: Request) {
     if (docs.length === 0) {
       return Response.json({ error: "No documents found." }, { status: 404 });
     }
-
-    // ✅ Dynamic import – fixes the "Export default doesn't exist" error
-    const archiver = (await import("archiver")).default;
 
     // Create a buffer to collect the zip data
     const buffers: Buffer[] = [];

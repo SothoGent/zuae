@@ -41,6 +41,6 @@
     "unrs-resolver@1.12.2": true,
     "es5-ext@0.10.64": true,
     "puppeteer@25.10.0": true,
-    "esbuild@0.28.2": true
+    "esbuild@0.15.18": true
   }
 }

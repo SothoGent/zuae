@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
 const CHECKLIST_STEPS = [
   { id: "documents_received", label: "📄 Documents received", icon: "📄" },
