@@ -7,11 +7,17 @@ import { ProfileForm } from "@/components/profile-form";
 import { Reveal } from "@/components/motion";
 
 export const metadata = { title: "My profile" };
+export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
   const user = await getSession();
   if (!user) redirect("/login");
-  const [profile] = await db.select().from(profiles).where(eq(profiles.userId, user.id)).limit(1);
+  let profile: typeof profiles.$inferSelect | null = null;
+  try {
+    [profile] = await db.select().from(profiles).where(eq(profiles.userId, user.id)).limit(1);
+  } catch (error) {
+    console.error("Database error loading profile:", error);
+  }
   return (
     <div className="mx-auto max-w-3xl">
       <Reveal>

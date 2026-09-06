@@ -3,6 +3,7 @@ import { Reveal } from "@/components/motion";
 import { IconShield } from "@/components/icons";
 
 export const metadata = { title: "Document vault" };
+export const dynamic = "force-dynamic";
 
 export default function DocumentsPage() {
   return (

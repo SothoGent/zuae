@@ -1,17 +1,14 @@
-import { db } from "@/db";
-import { profiles } from "@/db/schema";
 import { getSession } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
 import { SimpleApplyFlow } from "@/components/simple-apply-flow";
 import { Reveal } from "@/components/motion";
 
 export const metadata = { title: "Start an application" };
+export const dynamic = "force-dynamic";
 
 export default async function ApplyPage() {
   const user = await getSession();
   if (!user) redirect("/login");
-  const [profile] = await db.select().from(profiles).where(eq(profiles.userId, user.id)).limit(1);
   return (
     <div>
       <Reveal>

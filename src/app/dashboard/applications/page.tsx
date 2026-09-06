@@ -7,33 +7,51 @@ import { ApplicationsClient, type AppRow } from "@/components/applications-clien
 import { Reveal } from "@/components/motion";
 
 export const metadata = { title: "Applications & payments" };
+export const dynamic = "force-dynamic";
 
 export default async function ApplicationsPage() {
   const user = await getSession();
   if (!user) redirect("/login");
 
-  const apps = await db.select().from(applications).where(eq(applications.userId, user.id)).orderBy(desc(applications.createdAt));
-  const items = await db
-    .select({
-      id: applicationItems.id,
-      applicationId: applicationItems.applicationId,
-      status: applicationItems.status,
-      updatedAt: applicationItems.updatedAt,
-      programme: {
-        title: programmes.title,
-        faculty: programmes.faculty,
-        level: programmes.level,
-        deadline: programmes.deadline,
-      },
-      uniName: universities.name,
-      uniCity: universities.city,
-      uniHue: universities.hue,
-      uniLogoUrl: universities.logoUrl,
-    })
-    .from(applicationItems)
-    .innerJoin(programmes, eq(programmes.id, applicationItems.programmeId))
-    .innerJoin(universities, eq(universities.id, programmes.universityId));
-  const pays = await db.select().from(payments).where(eq(payments.userId, user.id));
+  let apps: (typeof applications.$inferSelect)[] = [];
+  let items: {
+    id: string;
+    applicationId: string;
+    status: string;
+    updatedAt: Date;
+    programme: { title: string; faculty: string; level: string; deadline: string };
+    uniName: string;
+    uniCity: string;
+    uniHue: number;
+    uniLogoUrl: string | null;
+  }[] = [];
+  let pays: (typeof payments.$inferSelect)[] = [];
+  try {
+    const [appsData, itemsData, paysData] = await Promise.all([
+      db.select().from(applications).where(eq(applications.userId, user.id)).orderBy(desc(applications.createdAt)),
+      db
+        .select({
+          id: applicationItems.id,
+          applicationId: applicationItems.applicationId,
+          status: applicationItems.status,
+          updatedAt: applicationItems.updatedAt,
+          programme: { title: programmes.title, faculty: programmes.faculty, level: programmes.level, deadline: programmes.deadline },
+          uniName: universities.name,
+          uniCity: universities.city,
+          uniHue: universities.hue,
+          uniLogoUrl: universities.logoUrl,
+        })
+        .from(applicationItems)
+        .innerJoin(programmes, eq(programmes.id, applicationItems.programmeId))
+        .innerJoin(universities, eq(universities.id, programmes.universityId)),
+      db.select().from(payments).where(eq(payments.userId, user.id)),
+    ]);
+    apps = appsData;
+    items = itemsData;
+    pays = paysData;
+  } catch (error) {
+    console.error("Database error loading applications:", error);
+  }
 
   const rows: AppRow[] = apps.map((a) => ({
     id: a.id,

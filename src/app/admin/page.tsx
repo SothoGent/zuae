@@ -5,24 +5,41 @@ import { IconCap, IconChart, IconUsers, IconWallet } from "@/components/icons";
 import { eq } from "drizzle-orm";
 
 export const metadata = { title: "Admin reports" };
+export const dynamic = "force-dynamic";
 
 export default async function AdminHome() {
-  const [students, apps, pays, items, unis, progs] = await Promise.all([
-    db.select({ id: users.id }).from(users).where(eq(users.role, "student")),
-    db.select().from(applications),
-    db.select().from(payments),
-    db
-      .select({ applicationId: applicationItems.applicationId, programmeId: applicationItems.programmeId, status: applicationItems.status })
-      .from(applicationItems),
-    db.select().from(universities),
-    db.select({ id: programmes.id }).from(programmes),
-  ]);
+  let students: { id: string }[] = [];
+  let apps: (typeof applications.$inferSelect)[] = [];
+  let pays: (typeof payments.$inferSelect)[] = [];
+  let items: { applicationId: string; programmeId: string; status: string }[] = [];
+  let unis: (typeof universities.$inferSelect)[] = [];
+  try {
+    const [studentsData, appsData, paysData, itemsData, unisData] = await Promise.all([
+      db.select({ id: users.id }).from(users).where(eq(users.role, "student")),
+      db.select().from(applications),
+      db.select().from(payments),
+      db.select({ applicationId: applicationItems.applicationId, programmeId: applicationItems.programmeId, status: applicationItems.status }).from(applicationItems),
+      db.select().from(universities),
+    ]);
+    students = studentsData;
+    apps = appsData;
+    pays = paysData;
+    items = itemsData;
+    unis = unisData;
+  } catch (error) {
+    console.error("Database error loading admin reports:", error);
+  }
 
   const paid = pays.filter((p) => p.status === "paid");
   const revenue = paid.reduce((s, p) => s + p.amount, 0);
 
   const progUni = new Map<string, string>();
-  const progRows = await db.select({ id: programmes.id, universityId: programmes.universityId }).from(programmes);
+  let progRows: { id: string; universityId: string }[] = [];
+  try {
+    progRows = await db.select({ id: programmes.id, universityId: programmes.universityId }).from(programmes);
+  } catch (error) {
+    console.error("Database error loading programme report data:", error);
+  }
   progRows.forEach((p) => progUni.set(p.id, p.universityId));
   const uniCounts = new Map<string, number>();
   for (const i of items) {
@@ -108,7 +125,7 @@ export default async function AdminHome() {
                 <div key={m.key} className="flex flex-1 flex-col items-center gap-2">
                   <span className="font-display text-xs font-extrabold text-navy-900">{m.total || ""}</span>
                   <div className="flex w-full flex-1 items-end rounded-t-md bg-paper-dark">
-                    <div className="w-full rounded-t-md bg-gradient-to-t from-navy-800 to-navy-600 transition-all duration-700" style={{ height: `${(m.total / maxMonth) * 100}%` }} />
+                    <div className="w-full rounded-t-md bg-linear-to-t from-navy-800 to-navy-600 transition-all duration-700" style={{ height: `${(m.total / maxMonth) * 100}%` }} />
                   </div>
                   <span className="text-[11px] font-bold text-ink-soft uppercase">{m.label}</span>
                 </div>

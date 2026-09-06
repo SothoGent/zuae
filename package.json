@@ -13,6 +13,7 @@
     "archiver": "^8.0.0",
     "csv-writer": "^1.6.0",
     "dotenv": "17.3.1",
+    "drizzle-kit": "^0.31.10",
     "drizzle-orm": "0.45.2",
     "next": "^16.3.4",
     "pg": "8.20.0",
@@ -29,7 +30,6 @@
     "@types/pg": "8.18.0",
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
-    "drizzle-kit": "^0.18.1",
     "eslint": "9.39.4",
     "eslint-config-next": "16.2.6",
     "postcss": "8.5.8",
@@ -41,6 +41,8 @@
     "unrs-resolver@1.12.2": true,
     "es5-ext@0.10.64": true,
     "puppeteer@25.10.0": true,
-    "esbuild@0.15.18": true
+    "esbuild@0.18.20": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true
   }
 }

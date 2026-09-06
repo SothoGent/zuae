@@ -9,6 +9,8 @@ import { IconArrow, IconCheck, IconClock, IconSpark, IconUpload } from "@/compon
 import { STATUS_LABEL, STATUS_TONE, computePoints } from "@/lib/grades";
 import { formatDate, timeAgo } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 const DOC_TYPES: { key: string; label: string; required: boolean }[] = [
   { key: "national_id", label: "National ID / Passport", required: true },
   { key: "certificates", label: "A-Level / O-Level certificates", required: true },
@@ -19,38 +21,42 @@ const DOC_TYPES: { key: string; label: string; required: boolean }[] = [
 export default async function DashboardHome() {
   const user = await getSession();
   if (!user) redirect("/login");
-  const [profile] = await db.select().from(profiles).where(eq(profiles.userId, user.id)).limit(1);
-  const docs = await db.select().from(documents).where(eq(documents.userId, user.id));
-  const apps = await db
-    .select()
-    .from(applications)
-    .where(eq(applications.userId, user.id))
-    .orderBy(desc(applications.createdAt));
-  const items = await db
-    .select({
-      id: applicationItems.id,
-      applicationId: applicationItems.applicationId,
-      status: applicationItems.status,
-      title: programmes.title,
-      uniName: universities.name,
-    })
-    .from(applicationItems)
-    .innerJoin(programmes, eq(programmes.id, applicationItems.programmeId))
-    .innerJoin(universities, eq(universities.id, programmes.universityId));
-  const notes = await db
-    .select()
-    .from(notifications)
-    .where(eq(notifications.userId, user.id))
-    .orderBy(desc(notifications.createdAt))
-    .limit(4);
   const today = new Date().toISOString().slice(0, 10);
-  const deadlines = await db
-    .select({ title: programmes.title, deadline: programmes.deadline, uniName: universities.name })
-    .from(programmes)
-    .innerJoin(universities, eq(universities.id, programmes.universityId))
-    .where(gte(programmes.deadline, today))
-    .orderBy(asc(programmes.deadline))
-    .limit(3);
+  let profile: typeof profiles.$inferSelect | null = null;
+  let docs: (typeof documents.$inferSelect)[] = [];
+  let apps: (typeof applications.$inferSelect)[] = [];
+  let items: { id: string; applicationId: string; status: string; title: string; uniName: string }[] = [];
+  let notes: (typeof notifications.$inferSelect)[] = [];
+  let deadlines: { title: string; deadline: string; uniName: string }[] = [];
+
+  try {
+    const [profileData, docsData, appsData, itemsData, notesData, deadlinesData] = await Promise.all([
+      db.select().from(profiles).where(eq(profiles.userId, user.id)).limit(1),
+      db.select().from(documents).where(eq(documents.userId, user.id)),
+      db.select().from(applications).where(eq(applications.userId, user.id)).orderBy(desc(applications.createdAt)),
+      db
+        .select({ id: applicationItems.id, applicationId: applicationItems.applicationId, status: applicationItems.status, title: programmes.title, uniName: universities.name })
+        .from(applicationItems)
+        .innerJoin(programmes, eq(programmes.id, applicationItems.programmeId))
+        .innerJoin(universities, eq(universities.id, programmes.universityId)),
+      db.select().from(notifications).where(eq(notifications.userId, user.id)).orderBy(desc(notifications.createdAt)).limit(4),
+      db
+        .select({ title: programmes.title, deadline: programmes.deadline, uniName: universities.name })
+        .from(programmes)
+        .innerJoin(universities, eq(universities.id, programmes.universityId))
+        .where(gte(programmes.deadline, today))
+        .orderBy(asc(programmes.deadline))
+        .limit(3),
+    ]);
+    profile = profileData[0] ?? null;
+    docs = docsData;
+    apps = appsData;
+    items = itemsData;
+    notes = notesData;
+    deadlines = deadlinesData;
+  } catch (error) {
+    console.error("Database error loading dashboard:", error);
+  }
 
   const myItems = items.filter((i) => apps.some((a) => a.id === i.applicationId));
   const completedDocs = DOC_TYPES.filter((t) => docs.some((d) => d.type === t.key)).length;
@@ -87,7 +93,7 @@ export default async function DashboardHome() {
               <span className="font-display text-3xl font-black text-navy-900">{completeness}%</span>
             </div>
             <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-paper-dark">
-              <div className="h-full rounded-full bg-gradient-to-r from-navy-700 to-gold-400 transition-all duration-700" style={{ width: `${completeness}%` }} />
+              <div className="h-full rounded-full bg-linear-to-r from-navy-700 to-gold-400 transition-all duration-700" style={{ width: `${completeness}%` }} />
             </div>
             <dl className="mt-5 space-y-2 text-sm">
               <div className="flex justify-between"><dt className="text-ink-soft">A-Level points (best 3)</dt><dd className="font-display font-extrabold text-navy-900">{points}</dd></div>

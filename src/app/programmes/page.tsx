@@ -12,6 +12,7 @@ import { formatDate } from "@/lib/utils";
 import { PROVINCES } from "@/lib/matcher";
 
 export const metadata: Metadata = { title: "Programme database" };
+export const dynamic = "force-dynamic";
 
 type Params = { q?: string; level?: string; province?: string; type?: string };
 
@@ -19,24 +20,32 @@ export default async function ProgrammesPage({ searchParams }: { searchParams: P
   const sp = await searchParams;
   const q = (sp.q ?? "").trim();
   const uniNames = ["University of Zimbabwe", "National University of Science & Technology", "Midlands State University"];
-  const rows = await db
-    .select({
-      programme: programmes,
-      university: {
-        id: universities.id,
-        name: universities.name,
-        type: universities.type,
-        category: universities.category,
-        city: universities.city,
-        province: universities.province,
-        hue: universities.hue,
-        logoUrl: universities.logoUrl,
-      },
-    })
-    .from(programmes)
-    .innerJoin(universities, eq(universities.id, programmes.universityId))
-    .where(and(eq(programmes.active, true), inArray(universities.name, uniNames)))
-    .orderBy(asc(programmes.deadline));
+  let rows: {
+    programme: typeof programmes.$inferSelect;
+    university: Pick<typeof universities.$inferSelect, "id" | "name" | "type" | "category" | "city" | "province" | "hue" | "logoUrl">;
+  }[] = [];
+  try {
+    rows = await db
+      .select({
+        programme: programmes,
+        university: {
+          id: universities.id,
+          name: universities.name,
+          type: universities.type,
+          category: universities.category,
+          city: universities.city,
+          province: universities.province,
+          hue: universities.hue,
+          logoUrl: universities.logoUrl,
+        },
+      })
+      .from(programmes)
+      .innerJoin(universities, eq(universities.id, programmes.universityId))
+      .where(and(eq(programmes.active, true), inArray(universities.name, uniNames)))
+      .orderBy(asc(programmes.deadline));
+  } catch (error) {
+    console.error("Database error loading programmes:", error);
+  }
 
   const filtered = rows.filter(({ programme: p, university: u }) => {
     if (sp.level && p.level !== sp.level) return false;

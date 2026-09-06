@@ -19,6 +19,8 @@ import { SiteFooter } from "@/components/site-footer";
 import { eq, gte, asc } from "drizzle-orm";
 import { formatDate } from "@/lib/utils";
 
+export const dynamic = "force-dynamic";
+
 const SERVICES = [
   { icon: IconCompass, title: "Course & University Guidance", body: "AI-assisted career guidance plus human counselling to help you choose the right course and university that fits your grades, budget and goals." },
   { icon: IconDoc, title: "Admission Assistance", body: "Step-by-step support with applications, entry requirements, document checklists and deadlines — nothing missed, nothing rejected." },
@@ -37,20 +39,29 @@ const STEPS = [
 
 export default async function Home() {
   const today = new Date().toISOString().slice(0, 10);
-  const [unis, upcoming] = await Promise.all([
-    db.select().from(universities),
-    db
-      .select({
-        title: programmes.title,
-        deadline: programmes.deadline,
-        uniName: universities.name,
-      })
-      .from(programmes)
-      .innerJoin(universities, eq(universities.id, programmes.universityId))
-      .where(gte(programmes.deadline, today))
-      .orderBy(asc(programmes.deadline))
-      .limit(4),
-  ]);
+  let unis: (typeof universities.$inferSelect)[] = [];
+  let upcoming: { title: string; deadline: string; uniName: string }[] = [];
+
+  try {
+    const [unisData, upcomingData] = await Promise.all([
+      db.select().from(universities),
+      db
+        .select({
+          title: programmes.title,
+          deadline: programmes.deadline,
+          uniName: universities.name,
+        })
+        .from(programmes)
+        .innerJoin(universities, eq(universities.id, programmes.universityId))
+        .where(gte(programmes.deadline, today))
+        .orderBy(asc(programmes.deadline))
+        .limit(4),
+    ]);
+    unis = unisData;
+    upcoming = upcomingData;
+  } catch (error) {
+    console.error("Database error loading home page data:", error);
+  }
   const next = upcoming[0];
 
   return (
