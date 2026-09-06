@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.1.17",
+    "@types/archiver": "^8.0.0",
     "@types/node": "22.19.15",
     "@types/pg": "8.18.0",
     "@types/react": "19.2.14",
@@ -40,6 +41,6 @@
     "unrs-resolver@1.12.2": true,
     "es5-ext@0.10.64": true,
     "puppeteer@25.10.0": true,
-    "esbuild@0.15.18": true
+    "esbuild@0.28.2": true
   }
 }

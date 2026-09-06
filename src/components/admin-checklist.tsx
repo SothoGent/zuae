@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 const CHECKLIST_STEPS = [
   { id: "documents_received", label: "📄 Documents received", icon: "📄" },
   { id: "documents_verified", label: "✅ Documents verified", icon: "✅" },
