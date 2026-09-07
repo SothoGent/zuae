@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Requirements } from "@/db/schema";
+import type { AlternativeEntry, Requirements } from "@/db/schema";
 import { formatDate } from "@/lib/utils";
 import { IconSearch, IconUpload, IconX } from "./icons";
 
@@ -41,6 +41,7 @@ const EMPTY = {
   description: "",
   minPoints: 8,
   required: [] as { subject: string; minGrade: string }[],
+  alternativeEntries: [] as AlternativeEntry[],
   active: true,
 };
 
@@ -54,6 +55,7 @@ export function AdminProgrammes() {
   const [uniFilter, setUniFilter] = useState("");
   const [editing, setEditing] = useState<typeof EMPTY | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [alternativeEntries, setAlternativeEntries] = useState<AlternativeEntry[]>([]);
   const [csvOpen, setCsvOpen] = useState(false);
   const [csv, setCsv] = useState("");
   const [csvResult, setCsvResult] = useState("");
@@ -86,7 +88,11 @@ export function AdminProgrammes() {
     if (!editing) return;
     const body = {
       ...editing,
-      requirements: { minPoints: editing.minPoints, required: editing.required.filter((r) => r.subject) },
+      requirements: {
+        minPoints: editing.minPoints,
+        required: editing.required.filter((r) => r.subject),
+        alternativeEntries: alternativeEntries.filter((entry) => entry.qualification || entry.field),
+      },
       description: editing.description || null,
     };
     const res = await fetch("/api/admin/programmes", {
@@ -139,6 +145,7 @@ export function AdminProgrammes() {
           <button
             onClick={() => {
               setEditing({ ...EMPTY, universityId: unis[0]?.id ?? "", deadline: new Date(Date.now() + 90 * 86400000).toISOString().slice(0, 10) });
+              setAlternativeEntries([]);
               setEditingId(null);
             }}
             className="rounded-lg bg-navy-800 px-4 py-2 text-sm font-bold text-white transition hover:bg-navy-700"
@@ -208,8 +215,10 @@ export function AdminProgrammes() {
                             description: p.description ?? "",
                             minPoints: p.requirements.minPoints,
                             required: p.requirements.required ?? [],
+                            alternativeEntries: p.requirements.alternativeEntries ?? [],
                             active: p.active,
                           });
+                          setAlternativeEntries(p.requirements.alternativeEntries ?? []);
                         }}
                         className="rounded-md bg-navy-100 px-2.5 py-1 text-[11px] font-extrabold text-navy-800 uppercase hover:bg-navy-200"
                       >
@@ -280,6 +289,41 @@ export function AdminProgrammes() {
                 ))}
                 <button onClick={() => setEditing({ ...editing, required: [...editing.required, { subject: "", minGrade: "C" }] })} className="text-xs font-extrabold text-navy-700 uppercase hover:underline">+ Add requirement</button>
               </div>
+            </div>
+            <div className="mt-4">
+              <span className={label}>Alternative Entry (Diploma/Certificate)</span>
+              <p className="mb-2 text-xs text-ink-soft">List qualifications that can gain entry to this programme.</p>
+              {alternativeEntries.map((entry, idx) => (
+                <div key={idx} className="mt-2 flex gap-2">
+                  <input
+                    className={`${field} flex-1`}
+                    placeholder="Qualification (e.g., Diploma in Accounting)"
+                    value={entry.qualification}
+                    onChange={(e) => setAlternativeEntries((entries) => entries.map((item, i) => (i === idx ? { ...item, qualification: e.target.value } : item)))}
+                  />
+                  <select
+                    className={`${field} w-28`}
+                    value={entry.grade}
+                    onChange={(e) => setAlternativeEntries((entries) => entries.map((item, i) => (i === idx ? { ...item, grade: e.target.value } : item)))}
+                  >
+                    <option value="Distinction">Distinction</option>
+                    <option value="Merit">Merit</option>
+                    <option value="Pass">Pass</option>
+                  </select>
+                  <input
+                    className={`${field} flex-1`}
+                    placeholder="Field (e.g., Business)"
+                    value={entry.field}
+                    onChange={(e) => setAlternativeEntries((entries) => entries.map((item, i) => (i === idx ? { ...item, field: e.target.value } : item)))}
+                  />
+                  <button type="button" onClick={() => setAlternativeEntries((entries) => entries.filter((_, i) => i !== idx))} className="px-2 text-ink-soft hover:text-zim-red" aria-label="Remove alternative entry">
+                    <IconX className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+              <button type="button" onClick={() => setAlternativeEntries([...alternativeEntries, { qualification: "", grade: "Pass", field: "" }])} className="mt-2 text-xs font-extrabold text-navy-700 uppercase hover:underline">
+                + Add entry
+              </button>
             </div>
             <label className="mt-4 flex items-center gap-2 text-sm font-bold text-ink">
               <input type="checkbox" checked={editing.active} onChange={(e) => setEditing({ ...editing, active: e.target.checked })} className="accent-navy-700" /> Active (visible to students)

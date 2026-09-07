@@ -1,4 +1,4 @@
-import type { SubjectGrade } from "@/db/schema";
+import type { Qualification, Requirements, SubjectGrade } from "@/db/schema";
 import { checkEligibility, normalizeSubject, type EligibilityResult } from "./grades";
 
 export type MatchProgramme = {
@@ -15,7 +15,7 @@ export type MatchProgramme = {
   location: string;
   intake: string;
   description: string | null;
-  requirements: { minPoints: number; required: { subject: string; minGrade: string }[] };
+  requirements: Requirements;
   university: {
     id: string;
     name: string;
@@ -30,6 +30,7 @@ export type MatchProgramme = {
 
 export type MatchCriteria = {
   subjects: SubjectGrade[];
+  qualifications: Qualification[];
   field: string; // career field or "not-sure"
   budgetMax: number | null;
   province: string; // "" = anywhere
@@ -37,6 +38,32 @@ export type MatchCriteria = {
   level: string; // "" | undergraduate | diploma | certificate
   international: boolean;
 };
+
+export function checkAlternativeEligibility(req: Requirements, qualifications: Qualification[], faculty = ""): EligibilityResult {
+  const entries = req.alternativeEntries ?? [];
+  const reasons: string[] = [];
+
+  for (const entry of entries) {
+    for (const qualification of qualifications) {
+      const qualificationName = qualification.name.toLowerCase();
+      const entryName = entry.qualification.toLowerCase();
+      const nameMatch = qualificationName.includes(entryName) || entryName.includes(qualificationName);
+      const entryField = entry.field.toLowerCase();
+      const fieldMatch = !entryField || faculty.toLowerCase().includes(entryField) || qualificationName.includes(entryField);
+      const gradeMatch =
+        qualification.grade === entry.grade ||
+        (entry.grade === "Pass" && qualification.grade !== "") ||
+        (entry.grade === "Merit" && ["Merit", "Distinction"].includes(qualification.grade)) ||
+        (entry.grade === "Distinction" && qualification.grade === "Distinction");
+      if (nameMatch && fieldMatch && gradeMatch) {
+        return { eligible: true, points: 0, reasons: [] };
+      }
+    }
+  }
+
+  if (entries.length > 0) reasons.push("No matching qualification for alternative entry");
+  return { eligible: false, points: 0, reasons };
+}
 
 export type MatchResult = {
   programme: MatchProgramme;
@@ -66,7 +93,11 @@ export function fieldMatchesProgramme(field: string, p: MatchProgramme): boolean
 export function matchProgrammes(all: MatchProgramme[], c: MatchCriteria): MatchResult[] {
   const results: MatchResult[] = [];
   for (const p of all) {
-    const eligibility = checkEligibility(p.requirements, c.subjects);
+    const aLevelEligibility = checkEligibility(p.requirements, c.subjects);
+    const alternativeEligibility = checkAlternativeEligibility(p.requirements, c.qualifications, p.faculty);
+    const eligibility: EligibilityResult = alternativeEligibility.eligible
+      ? { eligible: true, points: aLevelEligibility.points, reasons: [] }
+      : aLevelEligibility;
     const fee = c.international ? p.feesInternational : p.feesLocal;
     if (c.budgetMax !== null && fee > c.budgetMax) continue;
     if (c.province && p.university.province !== c.province) continue;

@@ -26,8 +26,25 @@ const bytea = customType<{ data: Buffer; driverData: Buffer }>({
 
 /* ---------- shared jsonb shapes ---------- */
 export type SubjectGrade = { subject: string; grade: string };
-export type Requirement = { subject: string; minGrade: string };
-export type Requirements = { minPoints: number; required: Requirement[] };
+export type SubjectRequirement = { subject: string; minGrade: string };
+export type Requirement = SubjectRequirement;
+export type Qualification = {
+  type: string;
+  name: string;
+  institution: string;
+  year: string;
+  grade: string;
+};
+export type AlternativeEntry = {
+  qualification: string;
+  grade: string;
+  field: string;
+};
+export type Requirements = {
+  minPoints: number;
+  required: SubjectRequirement[];
+  alternativeEntries?: AlternativeEntry[];
+};
 export type VerificationDoc = { name: string; url?: string; verifiedAt?: string };
 export type AiCareer = { title: string; field: string; why: string };
 export type AiSuggestion = {
@@ -73,6 +90,7 @@ export const profiles = pgTable("profiles", {
     .default("undergraduate"),
   subjects: jsonb("subjects").$type<SubjectGrade[]>().notNull().default([]),
   interests: jsonb("interests").$type<string[]>().notNull().default([]),
+  qualifications: jsonb("qualifications").$type<Qualification[]>().default([]),
   aiSuggestion: jsonb("ai_suggestion").$type<AiSuggestion | null>(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { AiSuggestion, SubjectGrade } from "@/db/schema";
+import type { AiSuggestion, Qualification, SubjectGrade } from "@/db/schema";
 import { GRADE_POINTS, SUBJECT_OPTIONS, computePoints } from "@/lib/grades";
 import { CAREER_FIELDS, PROVINCES, type MatchResult } from "@/lib/matcher";
 import { INTEREST_OPTIONS, STRENGTH_OPTIONS } from "@/lib/ai";
@@ -12,16 +12,18 @@ import { formatDate, formatUSD } from "@/lib/utils";
 
 type Props = {
   initialSubjects: SubjectGrade[];
+  initialQualifications: Qualification[];
   initialInterests: string[];
   nationality: string;
   studyLevel: string;
   savedSuggestion: AiSuggestion | null;
 };
 
-export function MatcherApp({ initialSubjects, initialInterests, nationality, studyLevel, savedSuggestion }: Props) {
+export function MatcherApp({ initialSubjects, initialQualifications, initialInterests, nationality, studyLevel, savedSuggestion }: Props) {
   const [subjects, setSubjects] = useState<SubjectGrade[]>(
     initialSubjects.length ? initialSubjects : [{ subject: "", grade: "C" }],
   );
+  const [qualifications] = useState<Qualification[]>(initialQualifications);
   const [field, setField] = useState("not-sure");
   const [budget, setBudget] = useState(3000);
   const [noBudget, setNoBudget] = useState(false);
@@ -54,6 +56,7 @@ export function MatcherApp({ initialSubjects, initialInterests, nationality, stu
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         subjects: subjects.filter((s) => s.subject),
+        qualifications,
         field: overrideField ?? field,
         budgetMax: noBudget ? null : budget,
         province,

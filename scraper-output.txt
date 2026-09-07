@@ -1,0 +1,50 @@
+(node:10744) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///C:/Users/Malcolm/Desktop/projects/ZUAE/scripts/scrape-all-universities.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to \\?\C:\Users\Malcolm\Desktop\projects\ZUAE\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+🚀 Starting scraper for all universities...
+
+
+🔄 Scraping Africa University...
+  - Trying https://africau.edu/program/
+    No items found on https://africau.edu/program/
+✅ Africa University: 0 programmes extracted.
+
+🔄 Scraping Lupane State University...
+  - Trying https://lsu.ac.zw/admissions/programmes?level=Undergraduate
+    Found 16 items with selector "h3, .programme-title, .course-title"
+✅ Lupane State University: 10 programmes extracted.
+
+🔄 Scraping Bulawayo Polytechnic...
+  - Trying https://bulawayopolytechnic.ac.zw/course-division/
+    Error on https://bulawayopolytechnic.ac.zw/course-division/: page.goto: Timeout 30000ms exceeded.
+Call log:
+[2m  - navigating to "https://bulawayopolytechnic.ac.zw/course-division/", waiting until "networkidle"[22m
+
+✅ Bulawayo Polytechnic: 0 programmes extracted.
+
+🔄 Scraping Chinhoyi University of Technology...
+  - Trying https://www.cut.ac.zw/welcome/program/programme-list
+    Error on https://www.cut.ac.zw/welcome/program/programme-list: page.goto: Timeout 30000ms exceeded.
+Call log:
+[2m  - navigating to "https://www.cut.ac.zw/welcome/program/programme-list", waiting until "networkidle"[22m
+
+✅ Chinhoyi University of Technology: 0 programmes extracted.
+
+🔄 Scraping Harare Polytechnic...
+  - Trying https://intracolleges.com/harare-polytechnic-courses/
+    Found 28 items with selector "li, .course-item"
+✅ Harare Polytechnic: 15 programmes extracted.
+
+🔄 Scraping Great Zimbabwe University...
+  - Trying https://www.gzu.ac.zw/undergraduate-programmes/
+    Found 11 items with selector "h3"
+✅ Great Zimbabwe University: 10 programmes extracted.
+
+🔄 Scraping Women's University in Africa...
+  - Trying https://www.wua.ac.zw/courses/
+    Found 62 items with selector ".course-item, .programme-item, li"
+✅ Women's University in Africa: 39 programmes extracted.
+
+✅ CSV written to ./data/programmes_all_universities.csv
+📊 Total programmes scraped: 74

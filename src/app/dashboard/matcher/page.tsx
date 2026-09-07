@@ -31,6 +31,7 @@ export default async function MatcherPage() {
       <div className="mt-8">
         <MatcherApp
           initialSubjects={profile?.subjects ?? []}
+          initialQualifications={profile?.qualifications ?? []}
           initialInterests={profile?.interests ?? []}
           nationality={profile?.nationality ?? "Zimbabwean"}
           studyLevel={profile?.studyLevel ?? "undergraduate"}

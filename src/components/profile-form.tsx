@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { SubjectGrade } from "@/db/schema";
+import type { Qualification, SubjectGrade } from "@/db/schema";
 import { SUBJECT_OPTIONS, GRADE_POINTS } from "@/lib/grades";
 import { INTEREST_OPTIONS } from "@/lib/ai";
 import { IconCheck, IconX } from "./icons";
@@ -16,6 +16,7 @@ type Profile = {
   studyLevel: string;
   subjects: SubjectGrade[];
   interests: string[];
+  qualifications: Qualification[] | null;
 };
 
 export function ProfileForm({ initial }: { initial: Profile | null }) {
@@ -32,11 +33,26 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
     initial?.subjects?.length ? initial.subjects : [{ subject: "", grade: "C" }],
   );
   const [interests, setInterests] = useState<string[]>(initial?.interests ?? []);
+  const [qualifications, setQualifications] = useState<Qualification[]>(initial?.qualifications ?? []);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
   const set = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  const addQualification = () => {
+    setQualifications([...qualifications, { type: "", name: "", institution: "", year: "", grade: "" }]);
+  };
+
+  const removeQualification = (index: number) => {
+    setQualifications(qualifications.filter((_, i) => i !== index));
+  };
+
+  const updateQualification = (index: number, key: keyof Qualification, value: string) => {
+    const updated = [...qualifications];
+    updated[index] = { ...updated[index], [key]: value };
+    setQualifications(updated);
+  };
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +61,7 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
     const res = await fetch("/api/profile", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, subjects: subjects.filter((s) => s.subject), interests }),
+      body: JSON.stringify({ ...form, subjects: subjects.filter((s) => s.subject), interests, qualifications }),
     });
     if (!res.ok) {
       setError((await res.json()).error ?? "Could not save.");
@@ -145,6 +161,41 @@ export function ProfileForm({ initial }: { initial: Profile | null }) {
               </button>
             );
           })}
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-navy-900/10 bg-white p-6">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-lg font-extrabold text-navy-900">Qualifications (Diploma / Certificate)</h2>
+          <button
+            type="button"
+            onClick={addQualification}
+            className="rounded-md bg-navy-100 px-3 py-1.5 text-xs font-extrabold text-navy-800 uppercase transition hover:bg-navy-200"
+          >
+            + Add qualification
+          </button>
+        </div>
+        <p className="mt-2 text-xs text-ink-soft">If you have a diploma or certificate, add it here for special entry consideration.</p>
+        <div className="mt-4 space-y-4">
+          {qualifications.map((q, idx) => (
+            <div key={idx} className="grid grid-cols-1 gap-3 rounded-lg border border-navy-900/10 p-4 sm:grid-cols-2 lg:grid-cols-4">
+              <input className={field} placeholder="Type (e.g., Diploma)" value={q.type} onChange={(e) => updateQualification(idx, "type", e.target.value)} />
+              <input className={field} placeholder="Name (e.g., Accounting)" value={q.name} onChange={(e) => updateQualification(idx, "name", e.target.value)} />
+              <input className={field} placeholder="Institution" value={q.institution} onChange={(e) => updateQualification(idx, "institution", e.target.value)} />
+              <div className="flex gap-2">
+                <input className={`${field} w-1/2`} placeholder="Year" value={q.year} onChange={(e) => updateQualification(idx, "year", e.target.value)} />
+                <select className={`${field} w-1/2`} value={q.grade} onChange={(e) => updateQualification(idx, "grade", e.target.value)}>
+                  <option value="">Grade</option>
+                  <option value="Distinction">Distinction</option>
+                  <option value="Merit">Merit</option>
+                  <option value="Pass">Pass</option>
+                </select>
+                <button type="button" onClick={() => removeQualification(idx)} className="rounded-md border border-navy-900/15 px-3 text-ink-soft hover:border-zim-red/40 hover:text-zim-red" aria-label="Remove qualification">
+                  <IconX className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 

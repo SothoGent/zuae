@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { profiles, users, type SubjectGrade } from "@/db/schema";
+import { profiles, users, type Qualification, type SubjectGrade } from "@/db/schema";
 import { errorResponse, readJson, requireUser } from "@/lib/guard";
 import { GRADE_POINTS } from "@/lib/grades";
 import { eq } from "drizzle-orm";
@@ -39,6 +39,18 @@ export async function PATCH(req: Request) {
     }
     if (Array.isArray(body.interests)) {
       allowed.interests = (body.interests as string[]).filter((i) => typeof i === "string").slice(0, 12);
+    }
+    if (Array.isArray(body.qualifications)) {
+      allowed.qualifications = (body.qualifications as Partial<Qualification>[])
+        .filter((q) => q && typeof q.name === "string")
+        .slice(0, 12)
+        .map((q) => ({
+          type: typeof q.type === "string" ? q.type.slice(0, 80) : "",
+          name: q.name!.slice(0, 160),
+          institution: typeof q.institution === "string" ? q.institution.slice(0, 160) : "",
+          year: typeof q.year === "string" ? q.year.slice(0, 12) : "",
+          grade: typeof q.grade === "string" ? q.grade.slice(0, 40) : "",
+        }));
     }
     allowed.updatedAt = new Date();
     const [profile] = await db

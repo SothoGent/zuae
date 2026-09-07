@@ -40,6 +40,7 @@ export async function POST(req: Request) {
 
     const criteria: MatchCriteria = {
       subjects: Array.isArray(body.subjects) ? body.subjects : [],
+      qualifications: Array.isArray(body.qualifications) ? body.qualifications : [],
       field: body.field ?? "not-sure",
       budgetMax: typeof body.budgetMax === "number" ? body.budgetMax : null,
       province: body.province ?? "",
