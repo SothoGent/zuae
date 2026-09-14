@@ -114,13 +114,13 @@ export function DocumentsManager() {
             >
               <IconUpload className="h-6 w-6 text-navy-700" />
               <span className="text-sm font-bold text-navy-800">Drop file or click to browse</span>
-              <span className="text-[11px] text-ink-soft">PDF, JPEG or PNG · max 8 MB · stored in your private vault</span>
+              <span className="text-[11px] text-ink-soft">PDF only · max 8 MB · stored in your private vault</span>
               <input
                 ref={(el) => {
                   inputs.current[t.key] = el;
                 }}
                 type="file"
-                accept="application/pdf,image/jpeg,image/png"
+                accept="application/pdf,.pdf"
                 className="hidden"
                 onChange={(e) => {
                   const f = e.target.files?.[0];

@@ -17,7 +17,7 @@ export const DOCUMENT_TYPES = [
   "consent",
 ] as const;
 export type DocumentType = (typeof DOCUMENT_TYPES)[number];
-const ALLOWED_MIME = ["application/pdf", "image/jpeg", "image/png"];
+const ALLOWED_MIME = ["application/pdf"];
 const MAX_BYTES = 8 * 1024 * 1024;
 
 export async function GET() {
@@ -51,8 +51,9 @@ export async function POST(req: Request) {
     const type = String(form.get("type") ?? "");
     if (!(file instanceof File)) throw new HttpError(400, "No file provided.");
     if (!DOCUMENT_TYPES.includes(type as DocumentType)) throw new HttpError(400, "Unknown document type.");
-    if (!ALLOWED_MIME.includes(file.type)) {
-      throw new HttpError(415, "Only PDF, JPEG or PNG files are accepted.");
+    const isPdf = ALLOWED_MIME.includes(file.type) || file.name.toLowerCase().endsWith(".pdf");
+    if (!isPdf) {
+      throw new HttpError(415, "Only PDF files are accepted.");
     }
     if (file.size > MAX_BYTES) throw new HttpError(413, "File exceeds the 8 MB limit.");
     if (file.size === 0) throw new HttpError(400, "File is empty.");
