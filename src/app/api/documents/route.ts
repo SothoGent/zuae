@@ -4,7 +4,18 @@ import { errorResponse, HttpError, requireUser } from "@/lib/guard";
 import { notify } from "@/lib/notify";
 import { and, eq } from "drizzle-orm";
 
-export const DOCUMENT_TYPES = ["national_id", "certificates", "passport_photo", "consent"] as const;
+export const DOCUMENT_TYPES = [
+  "national_id",
+  "passport",
+  "o_level_zimsec",
+  "o_level_cambridge",
+  "a_level_zimsec",
+  "a_level_cambridge",
+  "national_diploma",
+  "degree_certificate",
+  "passport_photo",
+  "consent",
+] as const;
 export type DocumentType = (typeof DOCUMENT_TYPES)[number];
 const ALLOWED_MIME = ["application/pdf", "image/jpeg", "image/png"];
 const MAX_BYTES = 8 * 1024 * 1024;

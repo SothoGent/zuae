@@ -5,6 +5,7 @@ import {
   payments,
   profiles,
   programmes,
+  type ApplicationTrack,
   universities,
 } from "@/db/schema";
 import { errorResponse, HttpError, readJson, requireUser } from "@/lib/guard";
@@ -65,10 +66,12 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const user = await requireUser();
-    const body = await readJson<{ programmeIds?: string[]; packageType?: PackageType }>(req);
+    const body = await readJson<{ programmeIds?: string[]; packageType?: PackageType; track?: ApplicationTrack }>(req);
     const ids = [...new Set(body.programmeIds ?? [])];
     const pkg = body.packageType ?? "basic";
+    const track = body.track ?? "regular";
     if (!PACKAGES[pkg]) throw new HttpError(400, "Unknown package.");
+    if (!["regular", "special", "graduate"].includes(track)) throw new HttpError(400, "Unknown application track.");
     if (ids.length === 0) throw new HttpError(400, "Select at least one programme.");
     if (ids.length > PACKAGES[pkg].maxUnis) {
       throw new HttpError(400, `The ${PACKAGES[pkg].label} package covers up to ${PACKAGES[pkg].maxUnis} universit${PACKAGES[pkg].maxUnis === 1 ? "y" : "ies"}.`);
@@ -87,6 +90,7 @@ export async function POST(req: Request) {
       .insert(applications)
       .values({
         userId: user.id,
+        track,
         packageType: pkg,
         serviceFee,
         universityFees,

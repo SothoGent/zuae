@@ -25,6 +25,20 @@ const bytea = customType<{ data: Buffer; driverData: Buffer }>({
 });
 
 /* ---------- shared jsonb shapes ---------- */
+export type ApplicationTrack = "regular" | "special" | "graduate";
+
+export type DocumentType =
+  | "national_id"
+  | "passport"
+  | "o_level_zimsec"
+  | "o_level_cambridge"
+  | "a_level_zimsec"
+  | "a_level_cambridge"
+  | "national_diploma"
+  | "degree_certificate"
+  | "passport_photo"
+  | "consent";
+
 export type SubjectGrade = { subject: string; grade: string };
 export type SubjectRequirement = { subject: string; minGrade: string };
 export type Requirement = SubjectRequirement;
@@ -83,6 +97,12 @@ export const profiles = pgTable("profiles", {
   phone: text("phone"),
   altContact: text("alt_contact"),
   currentSchool: text("current_school"),
+  applicationTrack: text("application_track", {
+    enum: ["regular", "special", "graduate"],
+  })
+    .notNull()
+    .default("regular"),
+  previousInstitution: text("previous_institution"),
   studyLevel: text("study_level", {
     enum: ["undergraduate", "diploma", "certificate"],
   })
@@ -104,7 +124,18 @@ export const documents = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
     type: text("type", {
-      enum: ["national_id", "certificates", "passport_photo", "consent"],
+      enum: [
+        "national_id",
+        "passport",
+        "o_level_zimsec",
+        "o_level_cambridge",
+        "a_level_zimsec",
+        "a_level_cambridge",
+        "national_diploma",
+        "degree_certificate",
+        "passport_photo",
+        "consent",
+      ],
     }).notNull(),
     fileName: text("file_name").notNull(),
     mimeType: text("mime_type").notNull(),
@@ -195,6 +226,9 @@ export const applications = pgTable("applications", {
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
+  track: text("track", { enum: ["regular", "special", "graduate"] })
+    .notNull()
+    .default("regular"),
   packageType: text("package_type", {
     enum: ["basic", "premium", "international"],
   })

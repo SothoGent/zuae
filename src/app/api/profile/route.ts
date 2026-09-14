@@ -20,9 +20,12 @@ export async function PATCH(req: Request) {
     const body = await readJson<Record<string, unknown>>(req);
     const allowed: Record<string, unknown> = {};
     const str = (k: string) => typeof body[k] === "string" ? (body[k] as string).slice(0, 160) : undefined;
-    for (const k of ["fullName", "dob", "nationality", "phone", "altContact", "currentSchool"] as const) {
+    for (const k of ["fullName", "dob", "nationality", "phone", "altContact", "currentSchool", "previousInstitution"] as const) {
       const v = str(k);
       if (v !== undefined) allowed[k] = v;
+    }
+    if (typeof body.applicationTrack === "string" && ["regular", "special", "graduate"].includes(body.applicationTrack)) {
+      allowed.applicationTrack = body.applicationTrack;
     }
     if (typeof body.studyLevel === "string" && ["undergraduate", "diploma", "certificate"].includes(body.studyLevel)) {
       allowed.studyLevel = body.studyLevel;

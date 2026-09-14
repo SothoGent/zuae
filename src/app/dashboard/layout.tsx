@@ -4,6 +4,7 @@ import { DashNav } from "@/components/dash-nav";
 import { NotificationBell } from "@/components/notification-bell";
 import { SignOutButton } from "@/components/sign-out-button";
 import { ZuaeCrest } from "@/components/brand";
+import { AiChatbot } from "@/components/ai-chatbot";
 import Link from "next/link";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -42,6 +43,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           </div>
         </div>
         <main className="px-4 py-8 sm:px-8">{children}</main>
+        <AiChatbot />
       </div>
     </div>
   );
