@@ -12,20 +12,18 @@ export const dynamic = "force-dynamic";
 export default async function MatcherPage() {
   const user = await getSession();
   if (!user) redirect("/login");
-  let profile: typeof profiles.$inferSelect | null = null;
-  try {
-    [profile] = await db.select().from(profiles).where(eq(profiles.userId, user.id)).limit(1);
-  } catch (error) {
-    console.error("Database error loading matcher profile:", error);
-  }
+  const [profile] = await db
+    .select()
+    .from(profiles)
+    .where(eq(profiles.userId, user.id))
+    .limit(1);
   return (
     <div>
       <Reveal>
         <p className="text-xs font-bold tracking-[0.25em] text-zim-green uppercase">Step 2 · guidance & matching</p>
         <h1 className="mt-1 font-display text-3xl font-black tracking-tight text-navy-900">Smart Eligibility Matcher</h1>
         <p className="mt-2 max-w-2xl text-sm text-ink-soft">
-          Live screening against published entry requirements, fees and deadlines. Shortlist what you love,
-          compare up to three side-by-side, then start an application package.
+          Live screening against published entry requirements, fees and deadlines.
         </p>
       </Reveal>
       <div className="mt-8">
